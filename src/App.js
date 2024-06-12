@@ -1,13 +1,13 @@
 import './App.css';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import P from 'prop-types';
 
-const Post = ({ post }) => {
+const Post = ({ post, handleClick }) => {
   console.log('filho renderiza');
   return (
     <div key={post.id} className="post">
-      <h1>{post.title}</h1>
+      <h1 onClick={() => handleClick(post.title)}>{post.title}</h1>
       <p>{post.body}</p>
     </div>
   );
@@ -19,28 +19,53 @@ Post.propTypes = {
     title: P.string,
     body: P.string,
   }).isRequired,
+  handleClick: P.func.isRequired,
 };
 
+/**
+ * Send the post title in the search input when the
+ *  title is clicked. Using useRef to assign input focus
+ *
+ * @returns
+ */
 function App() {
   const [posts, setPosts] = useState([]);
   const [value, setValue] = useState('');
+  // useRef is used to get element from DOM and apply its functions from the element.
+  const inputRef = useRef(null);
+  const counter = useRef(0);
 
   useEffect(() => {
-    setTimeout(() => {
-      fetch('https://jsonplaceholder.typicode.com/posts')
-        .then((res) => res.json())
-        .then((res) => setPosts(res));
-    }, 5000);
+    fetch('https://jsonplaceholder.typicode.com/posts')
+      .then((res) => res.json())
+      .then((res) => setPosts(res));
   }, []);
 
+  useEffect(() => {
+    console.log(inputRef.current);
+    inputRef.current.focus();
+  }, [value]);
+
+  useEffect(() => {
+    //Using useRef only the counter is rendered and does not render all component.
+    // The same case does not occur if you use useState,
+    // where all component is rendered.
+    counter.current++;
+  });
+
+  const handleClick = (value) => {
+    setValue(value);
+  };
+
   const PostsMemo = useMemo(() => {
-    return posts.length > 0 && posts.map((post) => <Post key={post.id} post={post} />);
+    return posts.length > 0 && posts.map((post) => <Post key={post.id} post={post} handleClick={handleClick} />);
   }, [posts]);
 
   console.log('Pai renderiza');
   return (
     <div className="App">
-      <input type="search" value={value} onChange={(e) => setValue(e.target.value)}></input>
+      <h6>Renderizou: {counter.current} X</h6>
+      <input ref={inputRef} type="search" value={value} onChange={(e) => setValue(e.target.value)}></input>
       {PostsMemo}
       {posts.length <= 0 && <p>Carregando...</p>}
     </div>
