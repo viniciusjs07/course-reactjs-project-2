@@ -1,35 +1,26 @@
 import './App.css';
-import React, { useState, useMemo } from 'react';
-import { useFetch } from '../../customHooks/useFetch';
-
+import React from 'react';
+import { useAsync } from '../../customHooks/useAsync';
+import { STATUS } from '../../utils/types';
+const fetchData = async () => {
+  const postsRaw = await fetch('https://jsonplaceholder.typicode.com/posts');
+  return await postsRaw.json();
+};
 export const App = () => {
-  const [postId, setPostId] = useState('');
-
-  // useMemo para memoizar o options que é um objeto.
-  // Previne que o objeto seja recriado em toda renderização do componente e
-  // evita entrar em loop no hook useEffect
-  const options = useMemo(
-    () => ({
-      method: 'GET',
-    }),
-    [],
-  );
-  const [result, loading] = useFetch('https://jsonplaceholder.typicode.com/posts/' + postId, options);
-
-  if (loading) {
-    return <p>Carregando...</p>;
+  const [, result, error, status] = useAsync(fetchData, true);
+  if (status === STATUS.IDLE) {
+    return <pre>Nada executando</pre>;
   }
-  return (
-    <>
-      {result.length &&
-        result.map((res) => (
-          <div key={res.id} onClick={() => setPostId(res.id)}>
-            <p>{res.title}</p>
-          </div>
-        ))}
-      {!result.length && <p onClick={() => setPostId('')}>{result.title}</p>}
-    </>
-  );
+  if (status === STATUS.PENDING) {
+    return <pre>Carregando...</pre>;
+  }
+  if (status === STATUS.ERROR) {
+    return <pre>{JSON.stringify(error, null, 2)}</pre>;
+  }
+  if (status === STATUS.SUCCESS) {
+    return <pre>{JSON.stringify(result, null, 2)}</pre>;
+  }
+  return null;
 };
 
 export default App;
