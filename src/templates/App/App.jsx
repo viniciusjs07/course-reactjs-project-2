@@ -9,10 +9,10 @@ const fetchData = async () => {
 export const App = () => {
   const [, result, error, status] = useAsync(fetchData, true);
   if (status === STATUS.IDLE) {
-    return <pre>Nada executando</pre>;
+    return <pre>Not result</pre>;
   }
   if (status === STATUS.PENDING) {
-    return <pre>Carregando...</pre>;
+    return <pre>Loading...</pre>;
   }
   if (status === STATUS.ERROR) {
     return <pre>{JSON.stringify(error, null, 2)}</pre>;
